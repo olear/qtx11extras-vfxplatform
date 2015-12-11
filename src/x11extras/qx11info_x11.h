@@ -67,6 +67,8 @@ public:
     static Display *display();
     static xcb_connection_t *connection();
 
+    static bool isCompositingManagerRunning();
+
 private:
     QX11Info();
 };

@@ -48,6 +48,8 @@
 #include <qguiapplication.h>
 #include <xcb/xcb.h>
 
+#include <X11/Xlib.h>
+
 QT_BEGIN_NAMESPACE
 
 
@@ -358,5 +360,37 @@ xcb_connection_t *QX11Info::connection()
     void *connection = native->nativeResourceForIntegration(QByteArray("connection"));
     return reinterpret_cast<xcb_connection_t *>(connection);
 }
+
+/*!
+    Returns true if there is a compositing manager running.
+
+    \sa isCompositingManagerRunning()                    
+*/
+bool QX11Info::isCompositingManagerRunning()
+{   
+    static bool initialized = false;
+    static bool compositingManagerRunning = false;  // assume not running
+    
+    if (!initialized) {
+        // QT5_FIXME
+#if 0 
+        xcb_connection_t *c = QX11Info::connection(); 
+        xcb_get_selection_owner_cookie_t cookie = xcb_get_selection_owner(c, atom(QXcbAtom::_NET_WM_CM_S0));
+        xcb_get_selection_owner_reply_t *reply;
+        reply = xcb_get_selection_owner_reply(c, cookie, 0);
+        
+        if (reply->owner) {
+            compositingManagerRunning = true;
+        }
+        
+        free(reply);
+#else
+        if (XGetSelectionOwner(QX11Info::display(), XInternAtom(QX11Info::display(), "_NET_WM_CM_S0", false)))
+            compositingManagerRunning = true;
+#endif
+        initialized = true;    // only check once, use cached value 
+    } 
+    return compositingManagerRunning;
+}   
 
 QT_END_NAMESPACE
